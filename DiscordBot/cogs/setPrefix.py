@@ -12,11 +12,9 @@ class setPrefix(commands.Cog):
             await ctx.send("ยาวไป ขอไม่เกิน 2 ตัว")
             return
 
-        # Update the command prefix
-        self.client.command_prefix = new_prefix
+        self.client.command_prefix = new_prefix+" "
         await ctx.send(f"ต่อไปนี้ให้ใช้อันนี้แทนนะ :  `{new_prefix}`")
 
-    # Error handling for the set_prefix command
     @set_prefix.error
     async def set_prefix_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
