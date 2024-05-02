@@ -37,7 +37,7 @@ class Music(commands.Cog):
             song = data['url']
             player = discord.FFmpegOpusAudio(song, **self.ffmpeg_options)
             self.voice_clients[ctx.guild.id].play(player, after=lambda e: self.bot.loop.create_task(self.play_next(ctx)))
-
+            await ctx.send("กำลังเล่นเพลง...")
 
         except Exception as e:
             print(e)

@@ -24,8 +24,16 @@ class getRole(commands.Cog):
         
     @commands.command(name="selfrole", description="รับยศ")
     async def self_role(sefl, ctx):
+        
         if ctx.author.guild_permissions.administrator:
-            await ctx.send("กดปุ่มเพื่อรับ/ถอดยศ Dogta2", view=SelfRoles())
+            embed = discord.Embed(
+                title="**รับยศเกมที่เล่นครับ**",
+                description=f"กดตามปุ่มเกมที่เล่นเพื่อรับยศได้เลย กดอีกรอบเพื่อเอายศนั้น ๆ ออก",
+                color=0xB2BEB5
+            )
+            embed.set_image(url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTCQH_Iwy3xbLNb4f2FeNz01tTuhIUwuV5yFfCpINvItA&s")
+            
+            await ctx.send(embed = embed, view=SelfRoles())
         else:
             await ctx.send("คุณไม่มีสิทธิ์ในการใช้คำสั่งนี้", delete_after=10) 
 
