@@ -24,7 +24,10 @@ class getRole(commands.Cog):
         
     @commands.command(name="selfrole", description="รับยศ")
     async def self_role(sefl, ctx):
-        await ctx.send("กดปุ่มเพื่อรับ/ถอดยศ Dogta2", view=SelfRoles())
+        if ctx.author.guild_permissions.administrator:
+            await ctx.send("กดปุ่มเพื่อรับ/ถอดยศ Dogta2", view=SelfRoles())
+        else:
+            await ctx.send("คุณไม่มีสิทธิ์ในการใช้คำสั่งนี้", delete_after=10) 
 
 async def setup(client):
     await client.add_cog(getRole(client))
