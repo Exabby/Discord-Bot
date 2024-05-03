@@ -1,2 +1,3 @@
 DiscordBot/apikeys.py
-/DiscordBot/__pycache__
+DiscordBot/__pycache__
+DiscordBot/cogs/__pycache__

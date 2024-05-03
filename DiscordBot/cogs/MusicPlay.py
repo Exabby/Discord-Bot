@@ -1,7 +1,9 @@
 # music.py (inside 'cogs' folder)
 import discord
 from discord.ext import commands
+from youtubesearchpython import VideosSearch
 import yt_dlp
+from yt_dlp import YoutubeDL
 import asyncio
 
 class Music(commands.Cog):
@@ -18,13 +20,24 @@ class Music(commands.Cog):
     intents.members = True
 
     async def play_next(self, ctx):
-        if self.queues[ctx.guild.id] != []:
+        if ctx.guild.id in self.queues and self.queues[ctx.guild.id]:
             # Fetch the first song in the queue
             link = self.queues[ctx.guild.id].pop(0)
-            await self.play(ctx, link)
+            await self.play(ctx, link=link)
+        else:
+            await ctx.send(">>> ตอนนี้ไม่มีเพลงอยู๋ในคิวแล้วนะ")
     
     @commands.command()
-    async def play(self, ctx, link):
+    async def play(self, ctx, *, link):
+        if ctx.author.voice is None:
+            await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
+            return
+        if ctx.guild.id in self.voice_clients and ctx.author.voice.channel != self.voice_clients[ctx.guild.id].channel:
+            await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
+            return
+        if ctx.guild.id in self.voice_clients and self.voice_clients[ctx.guild.id].is_playing():
+            await ctx.send(">>> เพลงกำลังเล่นอยู่นะ ถ้าต้องการเพิ่มเพลงเข้าคิว ให้ใช้คำสั่ง queue")
+            return
         try:
             voice_client = await ctx.author.voice.channel.connect()
             self.voice_clients[voice_client.guild.id] = voice_client
@@ -33,66 +46,110 @@ class Music(commands.Cog):
 
         try:
             loop = asyncio.get_event_loop()
+
+            # Check if link is a URL or a song name
+            if not link.startswith('http'):
+                videosSearch = VideosSearch(link, limit = 1)
+                
+                result = videosSearch.result()
+                if isinstance(result, dict) and 'result' in result:
+                    first_result = result['result'][0]
+                    link = first_result['link']
+                else:
+                    await ctx.send(">>> หาเพลงไม่เจอ...")
+                    return
+
             data = await asyncio.get_event_loop().run_in_executor(None, lambda: self.ytdl.extract_info(link, download=False))
             song = data['url']
             player = discord.FFmpegOpusAudio(song, **self.ffmpeg_options)
             self.voice_clients[ctx.guild.id].play(player, after=lambda e: self.bot.loop.create_task(self.play_next(ctx)))
-            await ctx.send("กำลังเล่นเพลง...")
+            title = data.get('title', 'Unknown')
+            duration = data.get('duration', 0)
+            minutes, seconds = divmod(duration, 60)
+            await ctx.send(f">>> กำลังเล่นเพลง {title} ความยาว {minutes}:{seconds:02d}")
 
         except Exception as e:
             print(e)
 
     @commands.command(name = "clearqueue")
     async def clear_queue(self, ctx):
+        if ctx.author.voice is None or ctx.author.voice.channel != self.voice_clients[ctx.guild.id].channel:
+            await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
+            return
         if ctx.guild.id in self.queues:
             self.queues[ctx.guild.id].clear()
-            await ctx.send("เคลียคิวแล้ว")
+            await ctx.send(">>> เคลียคิวแล้ว")
         else:
-            await ctx.send("ไม่มีคิว")
+            await ctx.send(">>> ไม่มีคิว")
 
     @commands.command()
     async def skip(self, ctx):
+        if ctx.author.voice is None or ctx.author.voice.channel != self.voice_clients[ctx.guild.id].channel:
+            await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
+            return
         try:
-            # Stop the currently playing song
             self.voice_clients[ctx.guild.id].stop()
-            await self.play_next(ctx)  # Play the next song in the queue
-            await ctx.send("ข้ามเพลงแล้ว...")
+            await self.play_next(ctx)
+            await ctx.send(">>> ข้ามไปเพลงถัดไปแล้ว...")
         except Exception as e:
             print(e)
 
 
     @commands.command()
     async def pause(self, ctx):
+        if ctx.author.voice is None or ctx.author.voice.channel != self.voice_clients[ctx.guild.id].channel:
+            await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
+            return
         try:
             self.voice_clients[ctx.guild.id].pause()
-            await ctx.send("หยุดเพลงชั่วคราว...")
+            await ctx.send(">>> หยุดเพลงชั่วคราว...")
         except Exception as e:
             print(e)
 
     @commands.command()
     async def resume(self, ctx):
+        if ctx.author.voice is None or ctx.author.voice.channel != self.voice_clients[ctx.guild.id].channel:
+            await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
+            return
         try:
             self.voice_clients[ctx.guild.id].resume()
-            await ctx.send("เล่นเพลงต่อ...")
+            await ctx.send(">>> เล่นเพลงต่อ...")
         except Exception as e:
             print(e)
 
     @commands.command()
     async def stop(self, ctx):
+        if ctx.author.voice is None or ctx.author.voice.channel != self.voice_clients[ctx.guild.id].channel:
+            await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
+            return
         try:
             self.voice_clients[ctx.guild.id].stop()
             await self.voice_clients[ctx.guild.id].disconnect()
             del self.voice_clients[ctx.guild.id]
-            await ctx.send("หยุดเล่นเพลงแล้ว...")
+            await ctx.send(">>> หยุดเล่นเพลงแล้ว...")
         except Exception as e:
             print(e)
             
     @commands.command()
-    async def queue(self, ctx, url):
+    async def queue(self, ctx, *, link):
+        if ctx.author.voice is None or ctx.author.voice.channel != self.voice_clients[ctx.guild.id].channel:
+            await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
+            return
+        if not link.startswith('http'):
+            videosSearch = VideosSearch(link, limit = 1)
+            result = videosSearch.result()
+            if isinstance(result, dict) and 'result' in result:
+                first_result = result['result'][0]
+                link = first_result['link']
+            else:
+                await ctx.send(">>> หาเพลงไม่เจอ...")
+                return
+
+        # Add the song to the queue
         if ctx.guild.id not in self.queues:
             self.queues[ctx.guild.id] = []
-        self.queues[ctx.guild.id].append(url)
-        await ctx.send("เพิ่มเข้าคิวแล้ว...")
+        self.queues[ctx.guild.id].append(link)
+        await ctx.send(">>> เพิ่มเพลงเข้าคิวแล้ว...")
             
 async def setup(bot):
     await bot.add_cog(Music(bot))
