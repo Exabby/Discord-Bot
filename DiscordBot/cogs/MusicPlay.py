@@ -25,8 +25,11 @@ class Music(commands.Cog):
             link = self.queues[ctx.guild.id].pop(0)
             await self.play(ctx, link=link)
         else:
-            await ctx.send(">>> ตอนนี้ไม่มีเพลงอยู๋ในคิวแล้วนะ")
-    
+            await ctx.send(">>> หมดเพลงจะเล่นแล้ว ออกห้องมาแล้วจ้า...")
+            await self.voice_clients[ctx.guild.id].disconnect()
+            del self.voice_clients[ctx.guild.id]
+
+
     @commands.command()
     async def play(self, ctx, *, link):
         if ctx.author.voice is None:
@@ -89,7 +92,6 @@ class Music(commands.Cog):
             return
         try:
             self.voice_clients[ctx.guild.id].stop()
-            await self.play_next(ctx)
             await ctx.send(">>> ข้ามไปเพลงถัดไปแล้ว...")
         except Exception as e:
             print(e)
