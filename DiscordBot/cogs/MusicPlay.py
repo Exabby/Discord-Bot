@@ -19,6 +19,21 @@ class Music(commands.Cog):
 
     intents.members = True
 
+    music_channel_id = None
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def music_ch(self, ctx, *, id: str):
+        print("id = "+ id)
+        if id.startswith('"') and id.endswith('"'):
+            self.music_channel_id = int(id.strip('"'))
+            channel = self.bot.get_channel(self.music_channel_id)
+        
+            await ctx.send(f">>> ต่อไปนี้คำสั่งเพลงจะใช้ได้เฉพาะในห้องนี้นะ {channel.mention}")
+        else:
+            await ctx.send(">>> ให้ใส่ ID ห้องในเครื่องหมายคำพูด \"\" ")
+    
+    
     async def play_next(self, ctx):
         if ctx.guild.id in self.queues and self.queues[ctx.guild.id]:
             # Fetch the first song in the queue
@@ -32,6 +47,8 @@ class Music(commands.Cog):
 
     @commands.command()
     async def play(self, ctx, *, link):
+        if self.music_channel_id and ctx.channel.id != self.music_channel_id:
+            return
         if ctx.author.voice is None:
             await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
             return
@@ -76,6 +93,8 @@ class Music(commands.Cog):
 
     @commands.command(name = "clearqueue")
     async def clear_queue(self, ctx):
+        if self.music_channel_id and ctx.channel.id != self.music_channel_id:
+            return
         if ctx.author.voice is None or ctx.author.voice.channel != self.voice_clients[ctx.guild.id].channel:
             await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
             return
@@ -87,6 +106,8 @@ class Music(commands.Cog):
 
     @commands.command()
     async def skip(self, ctx):
+        if self.music_channel_id and ctx.channel.id != self.music_channel_id:
+            return
         if ctx.author.voice is None or ctx.author.voice.channel != self.voice_clients[ctx.guild.id].channel:
             await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
             return
@@ -99,6 +120,8 @@ class Music(commands.Cog):
 
     @commands.command()
     async def pause(self, ctx):
+        if self.music_channel_id and ctx.channel.id != self.music_channel_id:
+            return
         if ctx.author.voice is None or ctx.author.voice.channel != self.voice_clients[ctx.guild.id].channel:
             await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
             return
@@ -110,6 +133,8 @@ class Music(commands.Cog):
 
     @commands.command()
     async def resume(self, ctx):
+        if self.music_channel_id and ctx.channel.id != self.music_channel_id:
+            return
         if ctx.author.voice is None or ctx.author.voice.channel != self.voice_clients[ctx.guild.id].channel:
             await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
             return
@@ -121,6 +146,8 @@ class Music(commands.Cog):
 
     @commands.command()
     async def stop(self, ctx):
+        if self.music_channel_id and ctx.channel.id != self.music_channel_id:
+            return
         if ctx.author.voice is None or ctx.author.voice.channel != self.voice_clients[ctx.guild.id].channel:
             await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
             return
@@ -134,6 +161,8 @@ class Music(commands.Cog):
             
     @commands.command()
     async def queue(self, ctx, *, link):
+        if self.music_channel_id and ctx.channel.id != self.music_channel_id:
+            return
         if ctx.author.voice is None or ctx.author.voice.channel != self.voice_clients[ctx.guild.id].channel:
             await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
             return
