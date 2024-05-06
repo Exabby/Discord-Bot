@@ -5,7 +5,7 @@ from youtubesearchpython import VideosSearch
 import yt_dlp
 from yt_dlp import YoutubeDL
 import asyncio
-
+import json
 class Music(commands.Cog):
     def __init__(self, client):
         self.client = client
@@ -14,24 +14,34 @@ class Music(commands.Cog):
         self.yt_dl_options = {"format": "bestaudio/best"}
         self.ytdl = yt_dlp.YoutubeDL(self.yt_dl_options)
         self.ffmpeg_options = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn -filter:a "volume=0.25"'}
+        self.load_ids()
 
     intents = discord.Intents.default()
 
     intents.members = True
 
-    music_channel_id = None
+    def load_ids(self):
+        try:
+            with open('data/ids.json', 'r') as f:
+                self.ids = json.load(f)
+                self.music_channel_id = self.ids.get('music_channel_id')
+        except FileNotFoundError:
+            self.music_channel_id = None
 
-    @commands.command()
+    def save_ids(self):
+        self.ids['music_channel_id'] = self.music_channel_id
+        with open('data/ids.json', 'w') as f:
+            json.dump(self.ids, f)
+            
+            
+    @commands.command(name = "music")
     @commands.has_permissions(administrator=True)
-    async def music_ch(self, ctx, *, id: str):
-        print("id = "+ id)
-        if id.startswith('"') and id.endswith('"'):
-            self.music_channel_id = int(id.strip('"'))
-            channel = self.client.get_channel(self.music_channel_id)
-        
-            await ctx.send(f">>> ต่อไปนี้คำสั่งเพลงจะใช้ได้เฉพาะในห้องนี้นะ {channel.mention}")
-        else:
-            await ctx.send(">>> ให้ใส่ ID ห้องในเครื่องหมายคำพูด \"\" ")
+    async def musicSetting(self, ctx, id: str):
+        self.music_channel_id = int(id)
+        self.save_ids()
+
+        channel = self.client.get_channel(self.music_channel_id)
+        await ctx.send(f">>> ต่อไปนี้คำสั่งเพลงจะใช้ได้เฉพาะในห้องนี้นะ {channel.mention}")
     
     
     async def play_next(self, ctx):
