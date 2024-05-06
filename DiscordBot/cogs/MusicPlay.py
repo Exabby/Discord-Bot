@@ -15,6 +15,7 @@ class Music(commands.Cog):
         self.ytdl = yt_dlp.YoutubeDL(self.yt_dl_options)
         self.ffmpeg_options = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn -filter:a "volume=0.25"'}
         self.load_ids()
+        self.playskip_used = False
 
     intents = discord.Intents.default()
 
@@ -50,9 +51,11 @@ class Music(commands.Cog):
             link = self.queues[ctx.guild.id].pop(0)
             await self.play(ctx, link=link)
         else:
-            await ctx.send(">>> หมดเพลงจะเล่นแล้ว ออกห้องมาแล้วจ้า...")
-            await self.voice_clients[ctx.guild.id].disconnect()
-            del self.voice_clients[ctx.guild.id]
+            if not self.playskip_used:  # Only disconnect if the playskip command was not used
+                await ctx.send(">>> หมดเพลงจะเล่นแล้ว ออกห้องมาแล้วจ้า...")
+                await self.voice_clients[ctx.guild.id].disconnect()
+                del self.voice_clients[ctx.guild.id]
+            self.playskip_used = False
 
 
     @commands.command()
@@ -191,7 +194,28 @@ class Music(commands.Cog):
             self.queues[ctx.guild.id] = []
         self.queues[ctx.guild.id].append(link)
         await ctx.send(">>> เพิ่มเพลงเข้าคิวแล้ว...")
+    
+    @commands.command()
+    async def playskip(self, ctx, *, link):
+        if ctx.author.voice is None or ctx.author.voice.channel != self.voice_clients[ctx.guild.id].channel:
+            await ctx.send(">>> ต้องอยู่ในห้องเดียวกันกับบอทนะถึงจะใช้คำสั่งเพลงได้...")
+            return
+        if not link.startswith('http'):
+            videosSearch = VideosSearch(link, limit = 1)
+            result = videosSearch.result()
+            if isinstance(result, dict) and 'result' in result:
+                first_result = result['result'][0]
+                link = first_result['link']
+            else:
+                await ctx.send(">>> หาเพลงไม่เจอ...")
+                return
             
+        self.voice_clients[ctx.guild.id].stop()
+        self.queues[ctx.guild.id] = []
+        self.playskip_used = True
+        await self.play(ctx, link=link)
+        await ctx.send(">>> ข้ามเพลงแล้ว กำลังเล่นเพลงใหม่...")
+    
 async def setup(client):
     await client.add_cog(Music(client))
     
