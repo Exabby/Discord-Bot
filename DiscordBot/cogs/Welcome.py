@@ -1,16 +1,37 @@
 from discord.ext import commands
 import discord
+import json
 
 class Welcome(commands.Cog):
         def __init__(self, client):
             self.client = client
-        # Ready Print'
+            
+            
+        welcomeChannel_id = None
+        roleChannel_id = None
+        
+        @commands.command(name = "welcome")
+        @commands.has_permissions(administrator=True)
+        async def welcomeSetting(self, ctx, id1: str, id2: str):
+                self.welcomeChannel_id = int(id1)
+                self.roleChannel_id = int(id2)
+                
+                
+                welcomeCh = self.client.get_channel(self.welcomeChannel_id)
+                roleCh = self.client.get_channel(self.roleChannel_id)
+                    
+                    
+                
+                    
+                await ctx.send(f">>> ข้อความ Welcome จะถูกส่งในห้องนี้ {welcomeCh.mention}\nและห้องรับโรลจะอยู่ตรงนี้ {roleCh.mention}")
+           
+        
             
         # Member Join in ***
         @commands.Cog.listener()
         async def on_member_join(self, member):
-            channel = self.client.get_channel(1090300527411208314)
-            roleChannel = self.client.get_channel(1228272789920813066)
+            channel = self.client.get_channel(self.welcomeChannel_id)
+            roleChannel = self.client.get_channel(self.roleChannel_id)
             embed = discord.Embed(
                 title="หวัดดีจ้า!",
                 description=f"คนนี้มาทำไรอะ, {member.mention}!",

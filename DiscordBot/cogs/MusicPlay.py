@@ -7,8 +7,8 @@ from yt_dlp import YoutubeDL
 import asyncio
 
 class Music(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, client):
+        self.client = client
         self.queues = {}
         self.voice_clients = {}
         self.yt_dl_options = {"format": "bestaudio/best"}
@@ -27,7 +27,7 @@ class Music(commands.Cog):
         print("id = "+ id)
         if id.startswith('"') and id.endswith('"'):
             self.music_channel_id = int(id.strip('"'))
-            channel = self.bot.get_channel(self.music_channel_id)
+            channel = self.client.get_channel(self.music_channel_id)
         
             await ctx.send(f">>> ต่อไปนี้คำสั่งเพลงจะใช้ได้เฉพาะในห้องนี้นะ {channel.mention}")
         else:
@@ -82,7 +82,7 @@ class Music(commands.Cog):
             data = await asyncio.get_event_loop().run_in_executor(None, lambda: self.ytdl.extract_info(link, download=False))
             song = data['url']
             player = discord.FFmpegOpusAudio(song, **self.ffmpeg_options)
-            self.voice_clients[ctx.guild.id].play(player, after=lambda e: self.bot.loop.create_task(self.play_next(ctx)))
+            self.voice_clients[ctx.guild.id].play(player, after=lambda e: self.client.loop.create_task(self.play_next(ctx)))
             title = data.get('title', 'Unknown')
             duration = data.get('duration', 0)
             minutes, seconds = divmod(duration, 60)
@@ -182,6 +182,6 @@ class Music(commands.Cog):
         self.queues[ctx.guild.id].append(link)
         await ctx.send(">>> เพิ่มเพลงเข้าคิวแล้ว...")
             
-async def setup(bot):
-    await bot.add_cog(Music(bot))
+async def setup(client):
+    await client.add_cog(Music(client))
     
