@@ -2,3 +2,4 @@ DiscordBot/apikeys.py
 DiscordBot/__pycache__
 DiscordBot/cogs/__pycache__
 audio/
+data/
