@@ -3,3 +3,4 @@ DiscordBot/__pycache__
 DiscordBot/cogs/__pycache__
 audio/
 data/
+DiscordBot/cogs/PlayFile.py
