@@ -98,5 +98,5 @@ class PlayFile(commands.Cog):
             
         await ctx.send("เพิ่มเข้าคิวแล้ว")
 
-async def setup(client):
-    await client.add_cog(PlayFile(client))
+# async def setup(client):
+#     await client.add_cog(PlayFile(client))

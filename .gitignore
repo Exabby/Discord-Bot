@@ -4,3 +4,4 @@ DiscordBot/cogs/__pycache__
 audio/
 data/
 DiscordBot/cogs/PlayFile.py
+DiscordBot/cogs/embed.py
