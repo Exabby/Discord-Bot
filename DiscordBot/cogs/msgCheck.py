@@ -7,7 +7,27 @@ class MsgCheck(commands.Cog):
         self.bot = bot
         self.timeout_duration = 10
 
-        self.words = ["กามู","ไกปู"]
+        self.words = ["กามู","ไกปู","มา"]
+        
+    @commands.command(name="addWord" )
+    async def add_word(self, ctx, *, message):
+        self.words.append(message)
+        await ctx.send(f"เพิ่มอันนี้เข้าไปในคลังคำห้ามใช้แล้ว: {message}")
+    
+    @commands.command(name="removeWord" )
+    async def remove_word(self, ctx, *, message):
+        if message in self.words:
+            self.words.remove(message)
+            await ctx.send(f"ลบอันนี้ออกจากคลังคำห้ามใช้แล้ว: {message}")
+        else:
+            await ctx.send(f"ไม่พบคำนี้ในคลังคำห้ามใช้: {message}")
+            
+    @commands.command(name="wordList")
+    async def word_list(self, ctx):
+        word_string = ", ".join(self.words)
+        await ctx.send(f"คำที่อยู่ในคลังคำห้ามใช้: [{word_string}]")
+        
+    
     @commands.Cog.listener()
     async def on_message(self, message):
         # Check if the message content meets your criteria
