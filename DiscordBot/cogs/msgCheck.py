@@ -10,11 +10,13 @@ class MsgCheck(commands.Cog):
         self.words = ["กามู","ไกปู","มา"]
         
     @commands.command(name="addWord" )
+    @commands.has_permissions(administrator=True)
     async def add_word(self, ctx, *, message):
         self.words.append(message)
         await ctx.send(f"เพิ่มอันนี้เข้าไปในคลังคำห้ามใช้แล้ว: {message}")
     
     @commands.command(name="removeWord" )
+    @commands.has_permissions(administrator=True)
     async def remove_word(self, ctx, *, message):
         if message in self.words:
             self.words.remove(message)
