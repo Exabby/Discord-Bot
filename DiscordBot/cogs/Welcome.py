@@ -1,40 +1,42 @@
 from discord.ext import commands
 import discord
 import json
+from utils import utils 
 
 class Welcome(commands.Cog):
     def __init__(self, client):
         self.client = client
-        self.load_ids()
-
-    def load_ids(self):
-        try:
-            with open('data/ids.json', 'r') as f:
-                self.ids = json.load(f)
-                self.welcomeChannel_id = self.ids.get('welcomeChannel_id')
-                self.roleChannel_id = self.ids.get('roleChannel_id')
-        except FileNotFoundError:
-            self.welcomeChannel_id = None
-            self.roleChannel_id = None
+        self.ids = utils.load_ids()
+        self.welcomeChannel_id = self.ids.get('welcomeChannel_id')
+        self.roleChannel_id = self.ids.get('roleChannel_id')
 
     def save_ids(self):
         self.ids['welcomeChannel_id'] = self.welcomeChannel_id
         self.ids['roleChannel_id'] = self.roleChannel_id
-        with open('data/ids.json', 'w') as f:
-            json.dump(self.ids, f)
+        utils.save_ids(self.ids)
             
     @commands.command(name = "welcome")
     @commands.has_permissions(administrator=True)
     async def welcomeSetting(self, ctx, id1: str, id2: str):
-        self.welcomeChannel_id = int(id1)
-        self.roleChannel_id = int(id2)
-        self.save_ids()
-        welcomeCh = self.client.get_channel(self.welcomeChannel_id)
-        roleCh = self.client.get_channel(self.roleChannel_id)
-        await ctx.send(f">>> ข้อความ Welcome จะถูกส่งในห้องนี้ {welcomeCh.mention}\nและห้องรับโรลจะอยู่ตรงนี้ {roleCh.mention}")
-        
+        try:
+            self.welcomeChannel_id = int(id1)
+            self.roleChannel_id = int(id2)
+            self.save_ids()
+
+            welcomeCh = self.client.get_channel(self.welcomeChannel_id)
+            roleCh = self.client.get_channel(self.roleChannel_id)
+            if welcomeCh is None or roleCh is None:
+                await ctx.send(">>> ไม่พบห้องที่ระบุ โปรดตรวจสอบ ID อีกครั้ง")
+                return
+
+            await ctx.send(f">>> ข้อความ Welcome จะถูกส่งในห้องนี้ {welcomeCh.mention}\nและห้องรับโรลจะอยู่ตรงนี้ {roleCh.mention}")
+        except ValueError:
+            await ctx.send(">>> ID ของห้องไม่ถูกต้อง โปรดระบุ ID ที่เป็นตัวเลข")
+        except Exception as e:
+            await ctx.send(f">>> บอทหลอน ไปเช็คคอนโซล")
+            print(f"Error in welcomeSetting command: {e}")
     
-        
+         
     # Member Join in ***
     @commands.Cog.listener()
     async def on_member_join(self, member):

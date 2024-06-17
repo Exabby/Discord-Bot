@@ -6,6 +6,8 @@ import yt_dlp
 from yt_dlp import YoutubeDL
 import asyncio
 import json
+from utils import utils
+
 class Music(commands.Cog):
     def __init__(self, client):
         self.client = client  # The discord client
@@ -14,7 +16,8 @@ class Music(commands.Cog):
         self.yt_dl_options = {"format": "bestaudio/best"}  # Options for the YoutubeDL instance
         self.ytdl = yt_dlp.YoutubeDL(self.yt_dl_options)  # The YoutubeDL instance
         self.ffmpeg_options = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn -filter:a "volume=0.25"'}  # Options for ffmpeg
-        self.load_ids()  # Load the ids from the ids.json file
+        self.ids = utils.load_ids() # Load the ids from the ids.json file
+        self.music_channel_id = self.ids.get('music_channel_id')  
         self.playskip_used = False  # A flag to check if the playskip command was used
         self.looping = {}  # A dictionary to keep track of looping for each guild
         self.current_song = {}  # A dictionary to keep track of the current song for each guild
@@ -24,30 +27,32 @@ class Music(commands.Cog):
     intents = discord.Intents.default()
     intents.members = True
 
-    # Load the ids from the ids.json file
-    def load_ids(self):
-        try:
-            with open('data/ids.json', 'r') as f:
-                self.ids = json.load(f)
-                self.music_channel_id = self.ids.get('music_channel_id')
-        except FileNotFoundError:
-            self.music_channel_id = None
+    
             
     # Save the ids to the ids.json file
     def save_ids(self):
         self.ids['music_channel_id'] = self.music_channel_id
-        with open('data/ids.json', 'w') as f:
-            json.dump(self.ids, f)
+        utils.save_ids(self.ids)
             
     # A command to set the music channel
-    @commands.command(name = "music")
+    @commands.command(name="music")
     @commands.has_permissions(administrator=True)
     async def musicSetting(self, ctx, id: str):
-        self.music_channel_id = int(id)
-        self.save_ids()
+        try:
+            self.music_channel_id = int(id)
+            self.save_ids()
 
-        channel = self.client.get_channel(self.music_channel_id)
-        await ctx.send(f">>> ต่อไปนี้คำสั่งเพลงจะใช้ได้เฉพาะในห้องนี้นะ {channel.mention}")
+            channel = self.client.get_channel(self.music_channel_id)
+            if channel is None:
+                await ctx.send(">>> ไม่พบห้องที่ระบุ โปรดตรวจสอบ ID อีกครั้ง")
+                return
+
+            await ctx.send(f">>> ต่อไปนี้คำสั่งเพลงจะใช้ได้เฉพาะในห้องนี้นะ {channel.mention}")
+        except ValueError:
+            await ctx.send(">>> ID ของห้องไม่ถูกต้อง โปรดระบุ ID ที่เป็นตัวเลข")
+        except Exception as e:
+            await ctx.send(f">>> บอทหลอน ไปเช็คคอนโซล")
+            print(f"Error in musicSetting command: {e}")
     
     # A function to play the next song in the queue
     async def play_next(self, ctx):
