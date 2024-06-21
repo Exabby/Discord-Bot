@@ -5,9 +5,9 @@ from discord.ext import commands
 class MsgCheck(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.timeout_duration = 10
-        self.words = ["กามู", "ไกปู", "มา"]
-
+        self.timeout_duration = 10 # Timeout duration in seconds
+        self.words = ["กามู", "ไกปู", "มา"] # Forbidden words
+        
     @commands.command(name="addWord")
     @commands.has_permissions(administrator=True)
     async def add_word(self, ctx, *, message):
@@ -29,7 +29,7 @@ class MsgCheck(commands.Cog):
         await ctx.send(f">>> คำที่อยู่ในคลังคำห้ามใช้: [{word_string}]")
     
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message1(self, message):
         if message.author == self.bot.user:
             return  # Ignore messages from the bot itself
         
@@ -74,5 +74,7 @@ class MsgCheck(commands.Cog):
                 if role != message.guild.default_role:  # Don't add the default role
                     await message.author.add_roles(role)
 
+
+        
 async def setup(bot):
     await bot.add_cog(MsgCheck(bot))

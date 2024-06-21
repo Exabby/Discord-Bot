@@ -1,0 +1,14 @@
+[
+    {
+        "label": "Dogta2",
+        "style": "success",
+        "emoji": "<:dota2:1199758271599349780>",
+        "role_id": 1199755048910069881
+    },
+    {
+        "label": "\u0e27\u0e32\u0e42\u0e23",
+        "style": "destructive",
+        "emoji": ":7630valorant:",
+        "role_id": 1252571957308821515
+    }
+]

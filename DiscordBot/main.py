@@ -6,8 +6,6 @@ import os
 import asyncio
 
 client = commands.Bot(command_prefix="gd ", intents=discord.Intents.all())
-
-
 bot_status = cycle(["Type 'gd' prefix for command", "พิมพ์ gd เพื่อใช้คำสั่ง"])
 
 @tasks.loop(seconds=5)
