@@ -1,6 +1,7 @@
 import asyncio
 import discord
 from discord.ext import commands
+from tools.timeoutHandler import msgCheckTimeoutApply 
 
 class MsgCheck(commands.Cog):
     def __init__(self, bot):
@@ -29,52 +30,24 @@ class MsgCheck(commands.Cog):
         await ctx.send(f">>> คำที่อยู่ในคลังคำห้ามใช้: [{word_string}]")
     
     @commands.Cog.listener()
-    async def on_message1(self, message):
-        if message.author == self.bot.user:
-            return  # Ignore messages from the bot itself
-        
-        # Check if the message content contains any forbidden words
-        if message.content in self.words:
-            if message.author.top_role > message.guild.me.top_role:
-                await message.channel.send(">>> " + message.content + " อะไ- ขอโทษครับพี่ ลืมดูคนพิมพ์")
-                return
+    async def on_message(self, message):
+        try:
+            if message.author == self.bot.user:
+                return  # Ignore messages from the bot itself
             
-            await message.channel.send(">>> " + message.content + " ไร เอาไป " + str(self.timeout_duration) + " วิ")
-        
-            # If the user is in a voice channel, disconnect them
-            if message.author.voice is not None:
-                await message.author.move_to(None)
-
-            # Retrieve the timeout role
-            timeout_role = discord.utils.get(message.guild.roles, name="Timeout")
-            if timeout_role is None:
-                await message.channel.send(">>> ไม่เจอยศ 'Timeout' สร้างก่อนนะพี่")
-                return
+            # Check if the message content contains any forbidden words
+            if message.content in self.words:
             
-            # Store the member's current roles
-            current_roles = message.author.roles
+                if message.author.top_role > message.guild.me.top_role:
+                    await message.channel.send(">>> " + message.content + " อะไ- ขอโทษครับพี่ ลืมดูคนพิมพ์")
+                    return
+                
+                await message.channel.send(">>> " + message.content + " ไร เอาไป " + str(self.timeout_duration) + " วิ")
             
-            # Remove all roles from the member
-            for role in current_roles:
-                if role != message.guild.default_role:  # Don't remove the default role
-                    await message.author.remove_roles(role)
-            
-            
-            # Add the timeout role to the member
-            await message.author.add_roles(timeout_role)
-            
-            
-            # Wait for the duration of the timeout, then remove the role
-            await asyncio.sleep(self.timeout_duration)
-            
-            await message.author.remove_roles(timeout_role)
-
-            # Add the original roles back to the member
-            for role in current_roles:
-                if role != message.guild.default_role:  # Don't add the default role
-                    await message.author.add_roles(role)
-
-
+                await msgCheckTimeoutApply(message, self.timeout_duration)
+        except Exception as e:
+            print(e)
+            await message.channel.send(e)
         
 async def setup(bot):
     await bot.add_cog(MsgCheck(bot))
