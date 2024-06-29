@@ -40,7 +40,7 @@ class VoteView(discord.ui.View):
         self.votes = 0
         self.voted_users = set()
         self.members_in_vc = ctx.author.voice.channel.members
-        self.required_votes = (len(self.members_in_vc) // 2)
+        self.required_votes = (len(self.members_in_vc) // 2) + 1
         
         self.add_item(VoteButton(self, label="👍"))
 
@@ -54,7 +54,7 @@ class VoteTimeout(commands.Cog):
     
     
             
-    @commands.command(name="voteTimeout")
+    @commands.command(name="voteTimeout", aliases=["vt"])
     async def voteTimeout(self, ctx, member: discord.Member, duration: int, *, reason: str):
         try:
             if not ctx.author.voice or not ctx.author.voice.channel:

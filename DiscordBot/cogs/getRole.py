@@ -1,6 +1,8 @@
 import json
 import discord
 from discord.ext import commands
+from utils import utils 
+
 
 buttonPath = "data/buttons.json"
 
@@ -44,10 +46,21 @@ class getRole(commands.Cog):
     def __init__(self, client):
         self.client = client
         
-    @commands.command(name="selfrole", description="รับยศ")
-    async def self_role(self, ctx):
+        self.ids = utils.load_ids()
+        self.roleChannelId = self.ids.get('roleChannel_id')
+    
+    async def clear_channel(self, channel_id):
+        channel = self.client.get_channel(channel_id)
+        if isinstance(channel, discord.TextChannel):  # Ensure it's a text channel
+            try:
+                await channel.purge(limit=None)
+            except Exception as e:
+                print(f"Failed to clear channel {channel_id}: {e}")
+        else:
+            print(f"Channel with ID {channel_id} not found or not a text channel.")
+    
+    async def roleEmbed(self, ctx = None, roleChannelId = None):
         try:
-            if ctx.author.guild_permissions.administrator:
                 embed = discord.Embed(
                     title="**รับยศเกมที่เล่นครับ**",
                     description=f"กดตามปุ่มเกมที่เล่นเพื่อรับยศได้เลย กดอีกรอบเพื่อเอายศนั้น ๆ ออก",
@@ -55,16 +68,36 @@ class getRole(commands.Cog):
                 )
                 embed.set_image(url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTCQH_Iwy3xbLNb4f2FeNz01tTuhIUwuV5yFfCpINvItA&s")
                 
-                # Send the embed with buttons
-                message = await ctx.send(embed=embed, view=SelfRoles())
+                if roleChannelId:
+                    channel = self.client.get_channel(roleChannelId)
+                    if isinstance(channel, discord.TextChannel):  # Ensure the channel is a text channel
+                        await channel.send(embed=embed, view=SelfRoles())
+                    else:
+                        print(f"Channel with ID {roleChannelId} not found or not a text channel.")
+                #     return
+
+                if ctx:
+                    # Send the embed with buttons
+                    message = await ctx.send(embed=embed, view=SelfRoles())
+                    # Delete the command message
+                    await ctx.message.delete()
                 
-                # Delete the command message
-                await ctx.message.delete()
-            else:
-                await ctx.send("คุณไม่มีสิทธิ์ในการใช้คำสั่งนี้", delete_after=10)
         except Exception as e:
             print(e)
-            
+    
+    
+    @commands.Cog.listener()
+    async def on_ready(self):
+        await self.clear_channel(self.roleChannelId)
+        await self.roleEmbed(roleChannelId=self.roleChannelId)
+    
+    
+    @commands.command(name="selfrole", description="รับยศ")
+    async def self_role(self, ctx):
+        if ctx.author.guild_permissions.administrator:
+            await self.roleEmbed(ctx)
+        else:
+            await ctx.send("คุณไม่มีสิทธิ์ในการใช้คำสั่งนี้", delete_after=10)
 
     @commands.command(name="addbutton", description="เพิ่มปุ่มยศ")
     async def add_button(self, ctx, label: str, style: str, emoji: str, role_id: int):
