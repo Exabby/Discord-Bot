@@ -17,10 +17,10 @@ class Welcome(commands.Cog):
             
     @commands.command(name = "welcome")
     @commands.has_permissions(administrator=True)
-    async def welcomeSetting(self, ctx, id1: str, id2: str):
+    async def welcomeSetting(self, ctx, id1: int, id2: int):
         try:
-            self.welcomeChannel_id = int(id1)
-            self.roleChannel_id = int(id2)
+            self.welcomeChannel_id = id1
+            self.roleChannel_id = id2
             self.save_ids()
 
             welcomeCh = self.client.get_channel(self.welcomeChannel_id)

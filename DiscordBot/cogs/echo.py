@@ -35,10 +35,13 @@ class Echo(commands.Cog):
         await self.client.wait_until_ready()
         while not self.client.is_closed():
             console_input = await self.client.loop.run_in_executor(None, input, "> ")
-            if self.target_channel:
-                await self.target_channel.send(console_input)
+            if console_input.strip():  # Check if the message is not empty or whitespace
+                if self.target_channel:
+                    await self.target_channel.send(console_input)
+                else:
+                    print("Target channel is not set. Use the setchannel command to set it.")
             else:
-                print("Target channel is not set. Use the setchannel command to set it.")
+                print("Empty message ignored.")
 
 async def setup(client):
     await client.add_cog(Echo(client))
